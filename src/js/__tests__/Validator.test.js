@@ -7,165 +7,152 @@ describe('Validator', () => {
     validator = new Validator();
   });
 
-  test('should return false for non-string input', () => {
-    expect(validator.validateUsername(null)).toBe(false);
-    expect(validator.validateUsername(undefined)).toBe(false);
-    expect(validator.validateUsername(123)).toBe(false);
-    expect(validator.validateUsername({})).toBe(false);
-    expect(validator.validateUsername([])).toBe(false);
-    expect(validator.validateUsername(true)).toBe(false);
-  });
+  // ===== НЕГАТИВНЫЕ ТЕСТЫ (ДОЛЖНЫ ВОЗВРАЩАТЬ FALSE) =====
 
-  test('should return false for empty string', () => {
-    expect(validator.validateUsername('')).toBe(false);
-    expect(validator.validateUsername('   ')).toBe(false);
-  });
+  describe('should return false for invalid inputs', () => {
+    test('non-string and empty inputs', () => {
+      const invalidInputs = [null, undefined, 123, {}, [], true, '', '   '];
+      invalidInputs.forEach(input => {
+        expect(validator.validateUsername(input)).toBe(false);
+      });
+    });
 
-  test('should reject usernames with invalid characters', () => {
-    const invalidChars = ['@', '#', '$', '%', '^', '&', '*', '(', ')',
-      '+', '=', ' ', '.', ',', '!', '?', '|', '/',
-      '\\', '[', ']', '{', '}', '<', '>', '`', '~'];
+    test('usernames with invalid characters', () => {
+      const invalidChars = ['@', '#', '$', '%', '^', '&', '*', '(', ')',
+        '+', '=', ' ', '.', ',', '!', '?', '|', '/',
+        '\\', '[', ']', '{', '}', '<', '>', '`', '~'];
 
-    invalidChars.forEach(char => {
-      expect(validator.validateUsername(`john${char}doe`)).toBe(false);
+      invalidChars.forEach(char => {
+        expect(validator.validateUsername(`john${char}doe`)).toBe(false);
+      });
+    });
+
+    test('usernames starting with invalid first character', () => {
+      const invalidFirstChars = [
+        '1john', '12john', '123john', '1234john', '0john',
+        '-john', '--john', '-john123',
+        '_john', '__john', '_john123',
+      ];
+
+      invalidFirstChars.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(false);
+      });
+    });
+
+    test('usernames ending with invalid last character', () => {
+      const invalidLastChars = [
+        'john1', 'john12', 'john123', 'john1234', 'john0',
+        'john-', 'john123-', 'john--',
+        'john_', 'john123_', 'john__',
+      ];
+
+      invalidLastChars.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(false);
+      });
+    });
+
+    test('usernames with more than three digits in a row', () => {
+      const moreThanThreeDigits = [
+        'john1234doe', 'john12345doe', 'jo1234hn', 'jo12345hn',
+        'a1234b', 'ab1234', '1234ab',
+      ];
+
+      moreThanThreeDigits.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(false);
+      });
+    });
+
+    test('usernames with digits spread out but ending with digit', () => {
+      const endingWithDigit = [
+        'a1b2c3', 'john1doe2test3', 'u1s2e3r4', 'a1b2c3d4',
+      ];
+
+      endingWithDigit.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(false);
+      });
+    });
+
+    test('complex usernames ending with digit', () => {
+      const complexEndingWithDigit = [
+        'john-doe_123', 'john_doe-123', 'my-super_username-123',
+        'a1-b2_c3-d4', 'a-1_b-2_c-3', 'a1-b2-c3-d4',
+      ];
+
+      complexEndingWithDigit.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(false);
+      });
     });
   });
 
-  test('should reject usernames starting with digits', () => {
-    expect(validator.validateUsername('1john')).toBe(false);
-    expect(validator.validateUsername('12john')).toBe(false);
-    expect(validator.validateUsername('123john')).toBe(false);
-    expect(validator.validateUsername('1234john')).toBe(false);
-    expect(validator.validateUsername('0john')).toBe(false);
-  });
+  // ===== ПОЗИТИВНЫЕ ТЕСТЫ (ДОЛЖНЫ ВОЗВРАЩАТЬ TRUE) =====
 
-  test('should reject usernames ending with digits', () => {
-    expect(validator.validateUsername('john1')).toBe(false);
-    expect(validator.validateUsername('john12')).toBe(false);
-    expect(validator.validateUsername('john123')).toBe(false);
-    expect(validator.validateUsername('john1234')).toBe(false);
-    expect(validator.validateUsername('john0')).toBe(false);
-  });
+  describe('should return true for valid usernames', () => {
+    test('usernames with only letters', () => {
+      const onlyLetters = [
+        'john', 'JohnDoe', 'a',
+        'abcdefghijklmnopqrstuvwxyz',
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      ];
 
-  test('should reject usernames starting with hyphen', () => {
-    expect(validator.validateUsername('-john')).toBe(false);
-    expect(validator.validateUsername('-john123')).toBe(false);
-    expect(validator.validateUsername('--john')).toBe(false);
-  });
+      onlyLetters.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(true);
+      });
+    });
 
-  test('should reject usernames ending with hyphen', () => {
-    expect(validator.validateUsername('john-')).toBe(false);
-    expect(validator.validateUsername('john123-')).toBe(false);
-    expect(validator.validateUsername('john--')).toBe(false);
-  });
+    test('usernames with up to three digits in a row', () => {
+      const upToThreeDigits = [
+        'john123doe', 'j123ohn', 'jo123hn', 'a123b',
+        'test123user', 'a123bcde', 'ab123cde', 'abc123def',
+      ];
 
-  test('should reject usernames starting with underscore', () => {
-    expect(validator.validateUsername('_john')).toBe(false);
-    expect(validator.validateUsername('_john123')).toBe(false);
-    expect(validator.validateUsername('__john')).toBe(false);
-  });
+      upToThreeDigits.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(true);
+      });
+    });
 
-  test('should reject usernames ending with underscore', () => {
-    expect(validator.validateUsername('john_')).toBe(false);
-    expect(validator.validateUsername('john123_')).toBe(false);
-    expect(validator.validateUsername('john__')).toBe(false);
-  });
+    test('usernames with digits spread out but ending with letter', () => {
+      const digitsSpreadOut = [
+        'u1s2e3r', 'a1b2c3d', 'john1doe2test', 'a1b2c3d4e',
+      ];
 
-  test('should reject usernames with more than three digits in a row', () => {
-    expect(validator.validateUsername('john1234doe')).toBe(false);
-    expect(validator.validateUsername('john12345doe')).toBe(false);
-    expect(validator.validateUsername('jo1234hn')).toBe(false);
-    expect(validator.validateUsername('jo12345hn')).toBe(false);
-    expect(validator.validateUsername('a1234b')).toBe(false);
-    expect(validator.validateUsername('ab1234')).toBe(false);
-    expect(validator.validateUsername('1234ab')).toBe(false);
-  });
+      digitsSpreadOut.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(true);
+      });
+    });
 
-  test('should accept valid usernames with only letters', () => {
-    expect(validator.validateUsername('john')).toBe(true);
-    expect(validator.validateUsername('JohnDoe')).toBe(true);
-    expect(validator.validateUsername('a')).toBe(true);
-    expect(validator.validateUsername('abcdefghijklmnopqrstuvwxyz')).toBe(true);
-    expect(validator.validateUsername('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).toBe(true);
-  });
+    test('usernames with hyphens and underscores', () => {
+      const withSeparators = [
+        'john-doe', 'john_doe', 'joh_n-do_e', 'test-user_name',
+        'a-b', 'a_b', 'a-b-c', 'a_b_c', 'a-b_c', 'a_b-c',
+        'a-b-c-d', 'a-b_c-d', 'a-b_c-d', 'a_b-c',
+      ];
 
-  test('should accept usernames with letters and up to three digits in a row', () => {
-    expect(validator.validateUsername('john123doe')).toBe(true);
-    expect(validator.validateUsername('j123ohn')).toBe(true);
-    expect(validator.validateUsername('jo123hn')).toBe(true);
-    expect(validator.validateUsername('a123b')).toBe(true);
-    expect(validator.validateUsername('test123user')).toBe(true);
-  });
+      withSeparators.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(true);
+      });
+    });
 
-  test('should accept usernames with digits spread out', () => {
-    expect(validator.validateUsername('a1b2c3')).toBe(false);
-    expect(validator.validateUsername('john1doe2test3')).toBe(false);
-    expect(validator.validateUsername('u1s2e3r4')).toBe(false);
-    expect(validator.validateUsername('a1b2c3d4')).toBe(false);
-    expect(validator.validateUsername('u1s2e3r')).toBe(true);
-    expect(validator.validateUsername('a1b2c3d')).toBe(true);
-    expect(validator.validateUsername('john1doe2test')).toBe(true);
-    expect(validator.validateUsername('a1b2c3d4e')).toBe(true);
-    expect(validator.validateUsername('a123b')).toBe(true);
-    expect(validator.validateUsername('a1234b')).toBe(false);
-  });
+    test('complex valid usernames', () => {
+      const complexValid = [
+        'john-doe_123_test', 'user-name_123_test',
+        'my-super_username-123_test', 'test-123_user',
+      ];
 
-  test('should accept usernames with hyphens and underscores', () => {
-    expect(validator.validateUsername('john-doe')).toBe(true);
-    expect(validator.validateUsername('john_doe')).toBe(true);
-    expect(validator.validateUsername('john-doe_123')).toBe(false);
-    expect(validator.validateUsername('joh_n-do_e')).toBe(true);
-    expect(validator.validateUsername('test-user_name')).toBe(true);
-    expect(validator.validateUsername('john-doe_123_test')).toBe(true);
-    expect(validator.validateUsername('john_doe-123')).toBe(false);
-  });
+      complexValid.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(true);
+      });
+    });
 
-  test('should accept complex valid usernames', () => {
-    expect(validator.validateUsername('john-doe_123_test')).toBe(true);
-    expect(validator.validateUsername('a-b-c-d')).toBe(true);
-    expect(validator.validateUsername('john_doe-123')).toBe(false);
-    expect(validator.validateUsername('user-name_123_test')).toBe(true);
-    expect(validator.validateUsername('my-super_username-123')).toBe(false);
-    expect(validator.validateUsername('my-super_username-123_test')).toBe(true);
-    expect(validator.validateUsername('test-123_user')).toBe(true);
-  });
+    test('edge cases', () => {
+      const edgeCases = [
+        'a', 'Z',
+        'a' + 'b'.repeat(99) + 'c', // длинное имя
+        'a1b2c3d4e5f6g',
+      ];
 
-  test('should accept usernames with mixed valid characters', () => {
-    expect(validator.validateUsername('a-b_c-d')).toBe(true);
-    expect(validator.validateUsername('a1-b2_c3-d4')).toBe(false);
-    expect(validator.validateUsername('a-1_b-2_c-3')).toBe(false);
-    expect(validator.validateUsername('a1-b2_c3-d4e')).toBe(true);
-    expect(validator.validateUsername('a-1_b-2_c-3d')).toBe(true);
-    expect(validator.validateUsername('a1-b2-c3-d4')).toBe(false);
-    expect(validator.validateUsername('a1-b2-c3-d4e')).toBe(true);
-  });
-
-  test('should handle edge cases correctly', () => {
-    expect(validator.validateUsername('a')).toBe(true);
-    expect(validator.validateUsername('Z')).toBe(true);
-    const longUsername = 'a' + 'b'.repeat(99) + 'c';
-    expect(validator.validateUsername(longUsername)).toBe(true);
-    expect(validator.validateUsername('abc123def')).toBe(true);
-    expect(validator.validateUsername('ab123cde')).toBe(true);
-    expect(validator.validateUsername('a123bcde')).toBe(true);
-    expect(validator.validateUsername('a123b')).toBe(true);
-    expect(validator.validateUsername('a1b2c3d4e5f6g')).toBe(true);
-  });
-
-  test('should handle single character edge cases', () => {
-    expect(validator.validateUsername('a')).toBe(true);
-    expect(validator.validateUsername('1')).toBe(false);
-    expect(validator.validateUsername('-')).toBe(false);
-    expect(validator.validateUsername('_')).toBe(false);
-    expect(validator.validateUsername(' ')).toBe(false);
-  });
-
-  test('should handle usernames with only valid separators between letters', () => {
-    expect(validator.validateUsername('a-b')).toBe(true);
-    expect(validator.validateUsername('a_b')).toBe(true);
-    expect(validator.validateUsername('a-b-c')).toBe(true);
-    expect(validator.validateUsername('a_b_c')).toBe(true);
-    expect(validator.validateUsername('a-b_c')).toBe(true);
-    expect(validator.validateUsername('a_b-c')).toBe(true);
+      edgeCases.forEach(username => {
+        expect(validator.validateUsername(username)).toBe(true);
+      });
+    });
   });
 });

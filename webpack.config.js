@@ -18,14 +18,14 @@ module.exports = {
       },
     ],
   },
-  devServer: {
-    static: {
-      directory: path.join(__dirname, 'dist'),
+    devServer: {
+      static: {
+        directory: path.join(__dirname, 'dist'),
+      },
+      compress: true,
+      port: 9001,  // было 9000, стало 9001
+      open: true,
+      hot: true,
     },
-    compress: true,
-    port: 9000,
-    open: true,
-    hot: true,
-  },
   mode: 'development',
 };
